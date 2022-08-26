@@ -1,6 +1,9 @@
 import pandas as pd
-from extration import extracao_dados as ex
+from extration import extracao_dados , create_date_table
 import math
+
+
+from tabelas import Products
 
 
 
@@ -8,8 +11,8 @@ import math
 def transformation():
     """#Transoformação dos dados """
 
-
-    customers,order_items,payments,orders,sallers=ex()
+    date=create_date_table()
+    customers,order_items,payments,orders,sellers,products=extracao_dados()
     #Excluindo as colunas da tabela de pedidos  que não serão utilizadas 
     orders.drop(labels=['order_purchase_timestamp','order_delivered_carrier_date','order_delivered_customer_date','order_estimated_delivery_date'], axis=1,inplace=True)
 
@@ -21,9 +24,14 @@ def transformation():
 
     #Excluindo as colunas da tabela de clientes  que não serão utilizadas 
     customers.drop(['customer_unique_id'], axis=1,inplace=True)
+    
+    #Excluindo as colunas da tabela de vendedores que não serão utilizadas
+    products.drop(['product_description_lenght','product_photos_qty','product_weight_g',
+                   'product_length_cm','product_height_cm','product_width_cm'], axis=1,inplace=True)
 
     #Excluindo as colunas da tabela de vendedores que não serão utilizadas
     #sallers.drop(['seller_city','seller_state'], axis=1,inplace=True)
+
 
     #Excluindo as colunas da tabela de Localização que não serão utilizadas 
     #geolocation.drop(['geolocation_lat','geolocation_lng'], axis=1,inplace=True)
@@ -59,16 +67,16 @@ def transformation():
 
 
 
-    orders['order_approved_at']= orders['Dia'].astype(str)+orders['Mês'].astype(str)+orders['Ano'].astype(str)
-
+    orders['order_approved_at']= orders['Dia'].astype(str)+'-'+orders['Mês'].astype(str)+'-'+orders['Ano'].astype(str)
+    
     #Criando a tabela Fato 
     #Verificar o melhor parametro
-    orders=orders.rename(columns={'order_approved_at': 'data_id'})
+    orders=orders.rename(columns={'order_approved_at': 'date_id'})
     fato_orders = pd.merge(orders,payments, how = 'left',on='order_id')
     fato_orders= pd.merge(fato_orders,order_items, how = 'left', on = 'order_id')
 
+    print('Feito a transformação dos dados')
 
-
-    return fato_orders,sallers,customers
+    return fato_orders,sellers,customers,products,date
 
 

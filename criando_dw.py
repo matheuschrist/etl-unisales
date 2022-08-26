@@ -1,32 +1,42 @@
 
-from sqlalchemy import create_engine
-
-def conection_dw():
-    #Carregamento no DW"""
-    engine = create_engine(
-        'postgresql://dbaadmin:{senha}@dw-unisales-dados.postgres.database.azure.com:5432/postgres')
-    conn=engine.connect()
-    print("Connection established")
-
-
-    return conn
+from connection import conection_dw as connection
+from tabelas import Base as base
+from transformacao import transformation
 
 
 
-"""""
-#insere os dados da DataFrame no banco de dados 
-fato_orders.to_sql(name='fato_orders' , con=conn , schema = None , if_exists = 'replace' , index = True , index_label = None ,
-                   chunksize = None , dtype = None , method = None )
-print('Executado')
-customers.to_sql(name='customers' , con=conn , schema = None , if_exists = 'replace' , index = True , index_label = None ,
-                   chunksize = None , dtype = None , method = None )
-print('Executado')
-sallers.to_sql(name='sallers' , con=conn , schema = None , if_exists = 'replace' , index = True , index_label = None ,
-                   chunksize = None , dtype = None , method = None )
-print('Executado')
-geolocation.to_sql(name='geolocation' , con=conn , schema = None , if_exists = 'replace' , index = True , index_label = None ,
-                   chunksize = None , dtype = None , method = None )
-print('Executado')
+def criando_dw():
+    
+    fato_orders,sellers,customers,products,date=transformation()
+    
+    engine,conn=connection()
+
+    #Inserindo as mudanças no banco -Criando as tabelas
+    base.metadata.create_all(engine)
 
 
-"""
+    
+    #insere os dados da DataFrame no banco de dados 
+   
+    customers.to_sql(name='dimension_customers' , con=conn , schema = None , if_exists = 'append' , index = None , index_label = None ,
+                    chunksize = None , dtype = None , method = None )
+    print('Executado')
+    sellers.to_sql(name='dimension_sellers' , con=conn , schema = None , if_exists = 'append' , index = None , index_label = None ,
+                    chunksize = None , dtype = None , method = None )
+    print('Executado')
+    date.to_sql(name='dimension_date' , con=conn , schema = None , if_exists = 'append' , index = None , index_label = None ,
+                    chunksize = None, dtype = None , method = None )
+    print('Executado')
+    products.to_sql(name='dimension_products' , con=conn , schema = None , if_exists = 'append' , index = None , index_label = None ,
+                    chunksize = None , dtype = None , method = None )
+    print('Executado')
+    fato_orders.to_sql(name='fact_orders' , con=conn , schema = None , if_exists = 'append' , index = None , index_label = None ,
+                    chunksize = None , dtype = None , method = None )
+     
+    print('Executado')
+
+    
+
+
+
+criando_dw()
